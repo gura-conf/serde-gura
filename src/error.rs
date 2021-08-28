@@ -67,6 +67,7 @@ impl de::Error for Error {
 impl Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            Error::Syntax => f.write_str("input text does not have a valid Gura format. Parsing failed"),
             Error::Message(msg) => write!(f, "{}", msg),
             Error::Eof => f.write_str("unexpected end of input"),
             Error::UnitNotSupported => f.write_str("unit values are not supported in Gura"),
