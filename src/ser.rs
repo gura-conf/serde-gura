@@ -296,7 +296,7 @@ impl ser::SerializeMap for SerializeMap {
     {
         match self.next_key.take() {
             Some(key) => self.hash.insert(key, to_gura_type(value)?),
-            None => panic!("serialize_value called before serialize_key"),
+            None => panic!("Serialize_value called before serialize_key"),
         };
         Ok(())
     }
