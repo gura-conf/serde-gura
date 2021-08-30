@@ -16,7 +16,7 @@
 //! This crate provides [Serde](https://github.com/serde-rs/serde) implementation for serialize/deserialize Gura format:
 //!
 //! ```
-//! use serde::{Deserialize, Serialize};
+//! use serde_derive::{Deserialize, Serialize};
 //! use serde_gura::Result;
 //! 
 //! #[derive(Serialize, Deserialize, PartialEq, Debug)]
