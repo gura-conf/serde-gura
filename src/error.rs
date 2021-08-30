@@ -24,11 +24,18 @@ pub enum Error {
     // field is missing.
     Message(String),
 
+    /// Used as a helper to retrieve values that are not meant to be an object
+    NoValidValue,
+
+    /// Invalid GuraType
+    InvalidType,
+    ExpectedIdentifier,
+
     // Zero or more variants that can be created directly by the Serializer and
     // Deserializer without going through `ser::Error` and `de::Error`. These
     // are specific to the format, in this case JSON.
     Eof,
-    Syntax,
+    Syntax(String),
     ExpectedBytes,
     ExpectedBoolean,
     ExpectedInteger,
@@ -67,10 +74,10 @@ impl de::Error for Error {
 impl Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Error::Syntax => f.write_str("input text does not have a valid Gura format. Parsing failed"),
+            Error::Syntax(msg) => write!(f, "Input text does not have a valid Gura format. Parsing failed with error \"{}\"", msg),
             Error::Message(msg) => write!(f, "{}", msg),
-            Error::Eof => f.write_str("unexpected end of input"),
-            Error::UnitNotSupported => f.write_str("unit values are not supported in Gura"),
+            Error::Eof => f.write_str("Unexpected end of input"),
+            Error::UnitNotSupported => f.write_str("Unit values are not supported in Gura"),
             /* and so forth */
             _ => unimplemented!(),
         }

@@ -34,7 +34,7 @@ pub fn from_str<'a, T>(s: &'a str) -> Result<T>
 where
     T: Deserialize<'a>,
 {
-    let parsed = parse(s).map_err(|_| Error::Syntax)?;
+    let parsed = parse(s).map_err(|e| Error::Syntax(e.to_string()))?;
     let mut deserializer = Deserializer::from_gura_type(parsed);
     let result = T::deserialize(&mut deserializer)?;
     Ok(result)
@@ -102,7 +102,6 @@ impl<'de> Deserializer {
     fn parse_string(&mut self) -> Result<String> {
         match &self.obj {
             GuraType::String(str_value) => Ok(str_value.clone()),
-            GuraType::Pair(key, _, _) => Ok(key.clone()),
             _ => Err(Error::ExpectedString),
         }
     }
@@ -122,7 +121,9 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer {
             GuraType::Integer(_) => self.deserialize_i64(visitor),
             GuraType::Array(_) => self.deserialize_seq(visitor),
             GuraType::Object(_) => self.deserialize_map(visitor),
-            _ => Err(Error::Syntax),
+            GuraType::Pair(..) => self.deserialize_identifier(visitor),
+            GuraType::String(_) => self.deserialize_string(visitor),
+            _ => Err(Error::InvalidType),
         }
     }
 
@@ -409,7 +410,11 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer {
     where
         V: Visitor<'de>,
     {
-        self.deserialize_str(visitor)
+        if let GuraType::Pair(key, _, _) = &self.obj {
+            visitor.visit_string(key.clone())
+        } else {
+            Err(Error::ExpectedIdentifier)
+        }
     }
 
     // Like `deserialize_any` but indicates to the `Deserializer` that it makes
@@ -485,7 +490,6 @@ impl<'de, 'a> SeqAccess<'de> for CommaSeparated {
         T: DeserializeSeed<'de>,
     {
         if let Ok((_, elem)) = self.get_next_elem() {
-            println!("En next_element_seed envia -> {:?}", elem);
             let mut de = Deserializer::from_gura_type(elem);
             seed.deserialize(&mut de).map(Some)
         } else {
@@ -509,8 +513,7 @@ impl<'de, 'a> MapAccess<'de> for CommaSeparated {
         }
 
         if let Ok((key, elem)) = self.peek_next_elem() {
-            let mut de =
-                Deserializer::from_gura_type(GuraType::Pair(key, Box::new(elem), 0));
+            let mut de = Deserializer::from_gura_type(GuraType::Pair(key, Box::new(elem), 0));
             seed.deserialize(&mut de).map(Some)
         } else {
             Ok(None)
@@ -574,7 +577,6 @@ impl<'de, 'a> EnumAccess<'de> for Enum {
         // The `deserialize_enum` method parsed a `{` character so we are
         // currently inside of a map. The seed will be deserializing itself from
         // the key of the map.
-        println!("Entra a variant_seed -> {:?}", self);
         let (key, elem) = self.peek_next_elem()?;
         let mut de = Deserializer::from_gura_type(GuraType::Pair(key, Box::new(elem), 0));
         let val = seed.deserialize(&mut de)?;
