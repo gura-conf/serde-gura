@@ -1,5 +1,7 @@
 #[cfg(test)]
 mod test_deserialize {
+    use std::vec;
+
     use serde_derive::Deserialize;
     use serde_gura::{from_str, Error};
 
@@ -56,7 +58,7 @@ seq: ["a", "b"]"#;
         }
 
         #[derive(Deserialize, Debug, PartialEq)]
-	    struct EmptyStruct {}
+        struct EmptyStruct {}
 
         #[derive(Deserialize, PartialEq, Debug)]
         struct TestStruct {
@@ -72,7 +74,7 @@ seq: ["a", "b"]"#;
             enums_5: TestEnum,
             optional: Option<bool>,
             optional_2: Option<bool>,
-            empty_struct: EmptyStruct
+            empty_struct: EmptyStruct,
         }
 
         let gura_str = r#"
@@ -111,7 +113,7 @@ empty_struct: empty
             },
             optional: None,
             optional_2: Some(false),
-            empty_struct: EmptyStruct {}
+            empty_struct: EmptyStruct {},
         };
 
         assert_eq!(expected, from_str(gura_str).unwrap());
@@ -121,11 +123,58 @@ empty_struct: empty
     fn test_invalid_unit() {
         #[derive(Deserialize, PartialEq, Debug)]
         struct TestStruct {
-            unit: ()
+            unit: (),
         }
 
         let gura_str = r#"unit: null"#;
         let your_error = from_str::<'_, TestStruct>(gura_str).unwrap_err();
         assert_eq!(Error::UnitNotSupported, your_error);
+    }
+
+    #[test]
+    fn test_objects_with_array() {
+        #[derive(Debug, Deserialize, PartialEq)]
+        struct TangoSinger {
+            name: String,
+            surname: String,
+            year_of_birth: u16,
+        }
+    
+        #[derive(Debug, Deserialize, PartialEq)]
+        struct TangoSingers {
+            tango_singers: Vec<TangoSinger>
+        }
+        
+        let gura_string = r##"
+# This is a Gura document.
+
+# Array of objects
+tango_singers: [
+    name: "Carlos"
+    surname: "Gardel"
+    year_of_birth: 1890,
+
+    name: "Aníbal"
+    surname: "Troilo"
+    year_of_birth: 1914
+]"##;
+
+        let tango_singers: TangoSingers = serde_gura::from_str(gura_string).unwrap();
+        let expected = TangoSingers {
+            tango_singers: vec![
+                TangoSinger {
+                    name: "Carlos".to_string(),
+                    surname: "Gardel".to_string(),
+                    year_of_birth: 1890,
+                },
+                TangoSinger {
+                    name: "Aníbal".to_string(),
+                    surname: "Troilo".to_string(),
+                    year_of_birth: 1914,
+                },
+            ]
+        };
+
+        assert_eq!(tango_singers, expected);
     }
 }
