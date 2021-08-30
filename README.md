@@ -3,7 +3,7 @@
 This crate is a Rust library for using the [Serde] serialization framework with
 data in [Gura] file format.
 
-This library does not reimplement a Gura parser; it uses the [gura-rs-parser] which is a pure Rust Gura 1.0.0 implementation.
+This library does not re-implement a Gura parser; it uses the [gura-rs-parser] which is a pure Rust Gura 1.0.0 implementation.
 
 [gura-rs-parser]: https://github.com/gura-conf/gura-rs-parser
 
