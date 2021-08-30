@@ -1,5 +1,7 @@
 # Serde Gura
 
+[![CI](https://github.com/gura-conf/serde-gura/actions/workflows/ci.yml/badge.svg)](https://github.com/gura-conf/serde-gura/actions/workflows/ci.yml)
+
 This crate is a Rust library for using the [Serde] serialization framework with
 data in [Gura] file format.
 
