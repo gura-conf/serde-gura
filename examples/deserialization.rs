@@ -26,7 +26,14 @@ tango_singers: [
     name: "Aníbal"
     surname: "Troilo"
     year_of_birth: 1914
-]"##;
+]
+
+# Other objects
+key: "value"
+why: "to demostrate, to show case"
+What: "not all Gura doc changes are data structure or code changes"
+
+"##;
 
     let tango_singers: TangoSingers = serde_gura::from_str(gura_string)?;
     let expected = TangoSingers {

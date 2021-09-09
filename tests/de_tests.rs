@@ -41,7 +41,9 @@ seq: ["a", "b"]"#;
         assert_eq!(expected, from_str(gura_str).unwrap());
 
         let gura_str = r#"Struct:
-    a: 1"#;
+    a: 1
+# Some other object
+key: "value""#;
         let expected = E::Struct { a: 1 };
         assert_eq!(expected, from_str(gura_str).unwrap());
     }
@@ -157,7 +159,14 @@ tango_singers: [
     name: "Aníbal"
     surname: "Troilo"
     year_of_birth: 1914
-]"##;
+]
+
+# Other objects
+key: "value"
+why: "to demostrate, to show case"
+What: "not all Gura doc changes are data structure or code changes"
+
+"##;
 
         let tango_singers: TangoSingers = serde_gura::from_str(gura_string).unwrap();
         let expected = TangoSingers {
