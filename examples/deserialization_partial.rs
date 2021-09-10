@@ -14,6 +14,7 @@ struct TangoSingers {
 }
 
 fn main() -> Result<()> {
+    // You can retrieve only the data you need from a more extended Gura string
     let gura_string = r##"
 # This is a Gura document.
 
@@ -26,8 +27,16 @@ tango_singers: [
     name: "Aníbal"
     surname: "Troilo"
     year_of_birth: 1914
-]"##;
+]
 
+# Other objects
+key: "value"
+why: "to demonstrate, to showcase"
+what: "not all Gura doc changes are data structure or code changes"
+
+"##;
+
+    // Note that only tango_singers are retrieved
     let tango_singers: TangoSingers = serde_gura::from_str(gura_string)?;
     let expected = TangoSingers {
         tango_singers: vec![
