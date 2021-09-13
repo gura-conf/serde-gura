@@ -41,7 +41,9 @@ seq: ["a", "b"]"#;
         assert_eq!(expected, from_str(gura_str).unwrap());
 
         let gura_str = r#"Struct:
-    a: 1"#;
+    a: 1
+# Some other object
+key: "value""#;
         let expected = E::Struct { a: 1 };
         assert_eq!(expected, from_str(gura_str).unwrap());
     }
@@ -139,12 +141,12 @@ empty_struct: empty
             surname: String,
             year_of_birth: u16,
         }
-    
+
         #[derive(Debug, Deserialize, PartialEq)]
         struct TangoSingers {
-            tango_singers: Vec<TangoSinger>
+            tango_singers: Vec<TangoSinger>,
         }
-        
+
         let gura_string = r##"
 # This is a Gura document.
 
@@ -157,7 +159,14 @@ tango_singers: [
     name: "Aníbal"
     surname: "Troilo"
     year_of_birth: 1914
-]"##;
+]
+
+# Other objects
+key: "value"
+why: "to demostrate, to show case"
+What: "not all Gura doc changes are data structure or code changes"
+
+"##;
 
         let tango_singers: TangoSingers = serde_gura::from_str(gura_string).unwrap();
         let expected = TangoSingers {
@@ -172,7 +181,50 @@ tango_singers: [
                     surname: "Troilo".to_string(),
                     year_of_birth: 1914,
                 },
-            ]
+            ],
+        };
+
+        assert_eq!(tango_singers, expected);
+    }
+
+    #[test]
+    fn test_objects_with_partial() {
+        #[derive(Debug, Deserialize, PartialEq)]
+        struct TangoSinger {
+            name: String,
+            surname: String,
+            year_of_birth: u16,
+        }
+
+        #[derive(Debug, Deserialize, PartialEq)]
+        struct Object {
+            tango_singer: TangoSinger,
+        }
+
+        let gura_string = r##"
+# This is a Gura document.
+
+# Array of objects
+tango_singer:
+    name: "Carlos"
+    surname: "Gardel"
+    year_of_birth: 1890
+
+# Other objects
+key: "value"
+why: "to demonstrate, to showcase"
+what: "not all Gura doc changes are data structure or code changes"
+
+"##;
+
+        // Extracts only tango_singer data ignoring other objects
+        let tango_singers: Object = serde_gura::from_str(gura_string).unwrap();
+        let expected = Object {
+            tango_singer: TangoSinger {
+                name: "Carlos".to_string(),
+                surname: "Gardel".to_string(),
+                year_of_birth: 1890,
+            },
         };
 
         assert_eq!(tango_singers, expected);
