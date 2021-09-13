@@ -1,7 +1,7 @@
 [package]
 name = "serde_gura"
 description = "Gura support for Serde"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["JWare Solutions <jware.organization@gmail.com>"]
 repository = "https://github.com/gura-conf/serde-gura"
 documentation = "https://docs.rs/serde_gura/"
@@ -11,7 +11,7 @@ keywords = ["serialization", "deserialization", "serde", "serialize", "deseriali
 
 [dependencies]
 serde = "1.0"
-gura = "0.3.4"
+gura = "0.4.0"
 indexmap = "1.7.0"
 
 [dev-dependencies]

@@ -353,7 +353,7 @@ impl ser::SerializeStructVariant for SerializeStructVariant {
     }
 }
 
-/// Serialize the given data structure as a String of YAML.
+/// Serialize the given data structure as a String of Gura.
 ///
 /// Serialization can fail if `T`'s implementation of `Serialize` decides to
 /// return an error.
