@@ -1,9 +1,20 @@
 #[cfg(test)]
 mod test_deserialize {
-    use std::vec;
-
     use serde_derive::Deserialize;
     use serde_gura::{from_str, Error};
+    use std::{collections::HashMap, vec};
+
+    #[derive(Debug, Deserialize, PartialEq)]
+    struct TangoSinger {
+        name: String,
+        surname: String,
+        year_of_birth: u16,
+    }
+
+    #[derive(Debug, Deserialize, PartialEq)]
+    struct Object {
+        tango_singer: TangoSinger,
+    }
 
     #[test]
     fn test_struct() {
@@ -136,13 +147,6 @@ empty_struct: empty
     #[test]
     fn test_objects_with_array() {
         #[derive(Debug, Deserialize, PartialEq)]
-        struct TangoSinger {
-            name: String,
-            surname: String,
-            year_of_birth: u16,
-        }
-
-        #[derive(Debug, Deserialize, PartialEq)]
         struct TangoSingers {
             tango_singers: Vec<TangoSinger>,
         }
@@ -189,18 +193,6 @@ What: "not all Gura doc changes are data structure or code changes"
 
     #[test]
     fn test_objects_with_partial() {
-        #[derive(Debug, Deserialize, PartialEq)]
-        struct TangoSinger {
-            name: String,
-            surname: String,
-            year_of_birth: u16,
-        }
-
-        #[derive(Debug, Deserialize, PartialEq)]
-        struct Object {
-            tango_singer: TangoSinger,
-        }
-
         let gura_string = r##"
 # This is a Gura document.
 
@@ -228,5 +220,26 @@ what: "not all Gura doc changes are data structure or code changes"
         };
 
         assert_eq!(tango_singers, expected);
+    }
+
+    #[test]
+    fn test_objects_with_direct_access() {
+        // Tests direct access without wrapper object
+        let gura_string = r##"
+tango_singer:
+    name: "Carlos"
+    surname: "Gardel"
+    year_of_birth: 1890
+"##;
+
+        // Avoid to get the wrapped struct to access to the TangoSinger data
+        let tango_singer: HashMap<String, TangoSinger> = serde_gura::from_str(gura_string).unwrap();
+        let expected = TangoSinger {
+            name: "Carlos".to_string(),
+            surname: "Gardel".to_string(),
+            year_of_birth: 1890,
+        };
+
+        assert_eq!(*tango_singer.get("tango_singer").unwrap(), expected);
     }
 }
