@@ -1,5 +1,7 @@
 #[cfg(test)]
 mod test_serialize {
+    use std::collections::HashMap;
+
     use serde_derive::Serialize;
     use serde_gura::to_string;
 
@@ -90,5 +92,38 @@ objects: [
         let s = E::Struct { a: 1 };
         let expected = "Struct:\n    a: 1";
         assert_eq!(to_string(&s).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_hash_map() {
+        // Tests https://github.com/gura-conf/serde-gura/issues/3#issue-1005484064
+
+        #[derive(Serialize, PartialEq, Debug)]
+        struct Database {
+            ip: String,
+            port: Vec<u16>,
+            connection_max: u32,
+            enabled: bool,
+        }
+        let database = Database {
+            ip: "127.0.0.1".to_string(),
+            port: vec![80, 8080],
+            connection_max: 1200,
+            enabled: true,
+        };
+
+        let mut map = HashMap::new();
+        map.insert("k", database);
+
+        let sss_str = serde_gura::to_string(&map).unwrap();
+
+        let expected = r##"
+k:
+    ip: "127.0.0.1"
+    port: [80, 8080]
+    connection_max: 1200
+    enabled: true"##;
+
+        assert_eq!(sss_str, expected.trim());
     }
 }

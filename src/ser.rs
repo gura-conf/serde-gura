@@ -306,7 +306,15 @@ impl ser::SerializeMap for SerializeMap {
         K: ser::Serialize,
         V: ser::Serialize,
     {
-        let res = to_gura_type(key)?.to_string();
+        let gura_elem = to_gura_type(key)?;
+
+        // This check prevents https://github.com/gura-conf/serde-gura/issues/3#issue-1005484064
+        let res = if let GuraType::String(str) = gura_elem {
+            str
+        } else {
+            gura_elem.to_string()
+        };
+
         self.hash.insert(res, to_gura_type(value)?);
         Ok(())
     }
@@ -365,7 +373,6 @@ where
     let result = value.serialize(serializer)?;
     Ok(dump(&result))
 }
-
 
 fn to_gura_type<T>(elem: T) -> Result<GuraType>
 where
