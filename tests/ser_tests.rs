@@ -117,12 +117,12 @@ objects: [
 
         let sss_str = serde_gura::to_string(&map).unwrap();
 
-        let expected = r##"
+        let expected = r#"
 k:
     ip: "127.0.0.1"
     port: [80, 8080]
     connection_max: 1200
-    enabled: true"##;
+    enabled: true"#;
 
         assert_eq!(sss_str, expected.trim());
     }

@@ -15,7 +15,7 @@ struct TangoSingers {
 
 fn main() -> Result<()> {
     // You can retrieve only the data you need from a more extended Gura string
-    let gura_string = r##"
+    let gura_string = r#"
 # This is a Gura document.
 
 # Array of objects
@@ -34,7 +34,7 @@ key: "value"
 why: "to demonstrate, to showcase"
 what: "not all Gura doc changes are data structure or code changes"
 
-"##;
+"#;
 
     // Note that only tango_singers are retrieved
     let tango_singers: TangoSingers = serde_gura::from_str(gura_string)?;

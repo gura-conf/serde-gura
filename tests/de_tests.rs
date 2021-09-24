@@ -151,7 +151,7 @@ empty_struct: empty
             tango_singers: Vec<TangoSinger>,
         }
 
-        let gura_string = r##"
+        let gura_string = r#"
 # This is a Gura document.
 
 # Array of objects
@@ -170,7 +170,7 @@ key: "value"
 why: "to demostrate, to show case"
 What: "not all Gura doc changes are data structure or code changes"
 
-"##;
+"#;
 
         let tango_singers: TangoSingers = serde_gura::from_str(gura_string).unwrap();
         let expected = TangoSingers {
@@ -193,7 +193,7 @@ What: "not all Gura doc changes are data structure or code changes"
 
     #[test]
     fn test_objects_with_partial() {
-        let gura_string = r##"
+        let gura_string = r#"
 # This is a Gura document.
 
 # Array of objects
@@ -207,7 +207,7 @@ key: "value"
 why: "to demonstrate, to showcase"
 what: "not all Gura doc changes are data structure or code changes"
 
-"##;
+"#;
 
         // Extracts only tango_singer data ignoring other objects
         let tango_singers: Object = serde_gura::from_str(gura_string).unwrap();
@@ -225,12 +225,12 @@ what: "not all Gura doc changes are data structure or code changes"
     #[test]
     fn test_objects_with_direct_access() {
         // Tests direct access without wrapper object
-        let gura_string = r##"
+        let gura_string = r#"
 tango_singer:
     name: "Carlos"
     surname: "Gardel"
     year_of_birth: 1890
-"##;
+"#;
 
         // Avoid to get the wrapped struct to access to the TangoSinger data
         let tango_singer: HashMap<String, TangoSinger> = serde_gura::from_str(gura_string).unwrap();

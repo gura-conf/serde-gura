@@ -16,12 +16,12 @@ struct TangoSinger {
 // }
 
 fn main() -> Result<()> {
-    let gura_string = r##"
+    let gura_string = r#"
 tango_singer:
     name: "Carlos"
     surname: "Gardel"
     year_of_birth: 1890
-"##;
+"#;
 
     // Avoid to get the wrapped struct (SingerObject) to access to the TangoSinger data
     let tango_singer: HashMap<String, TangoSinger> = serde_gura::from_str(gura_string)?;

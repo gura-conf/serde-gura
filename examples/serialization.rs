@@ -24,13 +24,13 @@ fn main() -> Result<()> {
         },
     };
 
-    let expected = r##"
+    let expected = r#"
 database:
     ip: "192.168.1.1"
     port: [8001, 8002, 8003]
     connection_max: 5000
     enabled: false
-"##;
+"#;
 
     let gura_str = serde_gura::to_string(&config)?;
     assert_eq!(gura_str, expected.trim());

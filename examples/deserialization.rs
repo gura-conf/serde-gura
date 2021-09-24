@@ -14,7 +14,7 @@ struct TangoSingers {
 }
 
 fn main() -> Result<()> {
-    let gura_string = r##"
+    let gura_string = r#"
 # This is a Gura document.
 
 # Array of objects
@@ -26,7 +26,7 @@ tango_singers: [
     name: "Aníbal"
     surname: "Troilo"
     year_of_birth: 1914
-]"##;
+]"#;
 
     let tango_singers: TangoSingers = serde_gura::from_str(gura_string)?;
     let expected = TangoSingers {
