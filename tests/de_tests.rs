@@ -242,4 +242,41 @@ tango_singer:
 
         assert_eq!(*tango_singer.get("tango_singer").unwrap(), expected);
     }
+
+    #[test]
+    fn test_enum_internally_tagged() {
+        #[derive(Deserialize, PartialEq, Debug)]
+        #[serde(rename_all = "lowercase", tag = "type")]
+        enum MyEnum {
+            Database(Database),
+        }
+
+        #[derive(Deserialize, PartialEq, Debug)]
+        struct Database {
+            ip: String,
+            port: Vec<u16>,
+            connection_max: u32,
+            enabled: bool,
+        }
+
+        // You have some type.
+        let expected = MyEnum::Database(Database {
+            ip: "127.0.0.1".to_string(),
+            port: vec![80, 8080],
+            connection_max: 1200,
+            enabled: true,
+        });
+
+        // let sss_str = r#"serde_gura::to_string(&database)?;"#
+        let sss_str = r#"type: "database"
+ip: "127.0.0.1"
+port: [80, 8080]
+connection_max: 1200
+enabled: true"#;
+
+        // Deserialize it back to a Rust type
+        let deserialized_database: MyEnum = serde_gura::from_str(&sss_str).unwrap();
+
+        assert_eq!(deserialized_database, expected);
+    }
 }
