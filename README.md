@@ -61,12 +61,12 @@ fn main() -> Result<()> {
 
     // Serialize it to a Gura string
     let database_str = serde_gura::to_string(&database)?;
-    let expected = r##"
+    let expected = r#"
 ip: "127.0.0.1"
 port: [80, 8080]
 connection_max: 1200
 enabled: true
-    "##;
+    "#;
     assert_eq!(database_str, expected.trim());
 
     // Deserialize it back to a Rust type
