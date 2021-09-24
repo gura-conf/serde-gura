@@ -4,6 +4,8 @@ mod test_deserialize {
     use serde_gura::{from_str, Error};
     use std::{collections::HashMap, vec};
 
+    // Some common structs
+
     #[derive(Debug, Deserialize, PartialEq)]
     struct TangoSinger {
         name: String,
@@ -30,32 +32,6 @@ seq: ["a", "b"]"#;
             int: 1,
             seq: vec!["a".to_owned(), "b".to_owned()],
         };
-        assert_eq!(expected, from_str(gura_str).unwrap());
-    }
-
-    #[test]
-    fn test_enum() {
-        #[derive(Deserialize, PartialEq, Debug)]
-        enum E {
-            Unit,
-            Newtype(u32),
-            Tuple(u32, u32),
-            Struct { a: u32 },
-        }
-
-        let gura_str = r#"Newtype: 1"#;
-        let expected = E::Newtype(1);
-        assert_eq!(expected, from_str(gura_str).unwrap());
-
-        let gura_str = r#"Tuple: [1, 2]"#;
-        let expected = E::Tuple(1, 2);
-        assert_eq!(expected, from_str(gura_str).unwrap());
-
-        let gura_str = r#"Struct:
-    a: 1
-# Some other object
-key: "value""#;
-        let expected = E::Struct { a: 1 };
         assert_eq!(expected, from_str(gura_str).unwrap());
     }
 
@@ -243,20 +219,59 @@ tango_singer:
         assert_eq!(*tango_singer.get("tango_singer").unwrap(), expected);
     }
 
+    // Enums tests
+
+    #[derive(Deserialize, PartialEq, Debug)]
+    struct Database {
+        ip: String,
+        port: Vec<u16>,
+        connection_max: u32,
+        enabled: bool,
+    }
+
+    #[test]
+    fn test_enum() {
+        #[derive(Deserialize, PartialEq, Debug)]
+        enum E {
+            Unit,
+            Newtype(u32),
+            Tuple(u32, u32),
+            Struct { a: u32 },
+        }
+
+        let gura_str = r#"Newtype: 1"#;
+        let expected = E::Newtype(1);
+        assert_eq!(expected, from_str(gura_str).unwrap());
+
+        let gura_str = r#"Tuple: [1, 2]"#;
+        let expected = E::Tuple(1, 2);
+        assert_eq!(expected, from_str(gura_str).unwrap());
+
+        let gura_str = r#"Struct:
+    a: 1
+# Some other object
+key: "value""#;
+        let expected = E::Struct { a: 1 };
+        assert_eq!(expected, from_str(gura_str).unwrap());
+    }
+
+    /// Generates the expected str for the Enums "Internally tagged", "Untagged" and
+    /// "Adjacently tagged" alternatives
+    fn get_enums_expected_str() -> String {
+        r#"type: "database"
+ip: "127.0.0.1"
+port: [80, 8080]
+connection_max: 1200
+enabled: true"#
+            .to_string()
+    }
+
     #[test]
     fn test_enum_internally_tagged() {
         #[derive(Deserialize, PartialEq, Debug)]
         #[serde(rename_all = "lowercase", tag = "type")]
         enum MyEnum {
             Database(Database),
-        }
-
-        #[derive(Deserialize, PartialEq, Debug)]
-        struct Database {
-            ip: String,
-            port: Vec<u16>,
-            connection_max: u32,
-            enabled: bool,
         }
 
         // You have some type.
@@ -267,15 +282,32 @@ tango_singer:
             enabled: true,
         });
 
-        // let sss_str = r#"serde_gura::to_string(&database)?;"#
-        let sss_str = r#"type: "database"
-ip: "127.0.0.1"
-port: [80, 8080]
-connection_max: 1200
-enabled: true"#;
+        // Deserialize it back to a Rust type
+        let expected_str = get_enums_expected_str();
+        let deserialized_database: MyEnum = serde_gura::from_str(&expected_str).unwrap();
+
+        assert_eq!(deserialized_database, expected);
+    }
+
+    #[test]
+    fn test_enum_untagged() {
+        #[derive(Deserialize, PartialEq, Debug)]
+        #[serde(rename_all = "lowercase", untagged)]
+        enum MyEnum {
+            Database(Database),
+        }
+
+        // You have some type.
+        let expected = MyEnum::Database(Database {
+            ip: "127.0.0.1".to_string(),
+            port: vec![80, 8080],
+            connection_max: 1200,
+            enabled: true,
+        });
 
         // Deserialize it back to a Rust type
-        let deserialized_database: MyEnum = serde_gura::from_str(&sss_str).unwrap();
+        let expected_str = get_enums_expected_str();
+        let deserialized_database: MyEnum = serde_gura::from_str(&expected_str).unwrap();
 
         assert_eq!(deserialized_database, expected);
     }
