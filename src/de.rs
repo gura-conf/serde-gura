@@ -90,8 +90,12 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer {
         V: Visitor<'de>,
     {
         match self.obj {
-            GuraType::Integer(_) => self.deserialize_i64(visitor),
             GuraType::Array(_) => self.deserialize_seq(visitor),
+            GuraType::BigInteger(_) => self.deserialize_i128(visitor),
+            GuraType::Bool(_) => self.deserialize_bool(visitor),
+            GuraType::Float(_) => self.deserialize_f64(visitor),
+            GuraType::Integer(_) => self.deserialize_i64(visitor),
+            GuraType::Null => self.deserialize_unit(visitor),
             GuraType::Object(_) => self.deserialize_map(visitor),
             GuraType::Pair(..) => self.deserialize_identifier(visitor),
             GuraType::String(_) => self.deserialize_string(visitor),
@@ -333,10 +337,10 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer {
     where
         V: Visitor<'de>,
     {
-        if let GuraType::Pair(key, _, _) = &self.obj {
-            visitor.visit_string(key.clone())
-        } else {
-            Err(Error::ExpectedIdentifier)
+        match &self.obj {
+            GuraType::Pair(key, _, _) => visitor.visit_string(key.clone()),
+            GuraType::String(str) => visitor.visit_string(str.to_string()),
+            _ => Err(Error::ExpectedIdentifier),
         }
     }
 
