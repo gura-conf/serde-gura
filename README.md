@@ -78,7 +78,7 @@ enabled: true
 ```
 
 
-## Licence
+## License
 
 Serde Gura is distributed under the terms of the MIT license.
 
