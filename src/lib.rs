@@ -6,7 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-
 //! ![](https://raw.githubusercontent.com/gura-conf/gura/master/static/img/logos/gura-200.png)
 //!
 //! # Serde Gura
@@ -18,7 +17,7 @@
 //! ```
 //! use serde_derive::{Deserialize, Serialize};
 //! use serde_gura::Result;
-//! 
+//!
 //! #[derive(Serialize, Deserialize, PartialEq, Debug)]
 //! struct Database {
 //!     ip: String,
@@ -26,7 +25,7 @@
 //!     connection_max: u32,
 //!     enabled: bool,
 //! }
-//! 
+//!
 //! fn main() -> Result<()> {
 //!     // You have some type.
 //!     let database = Database {
@@ -35,7 +34,7 @@
 //!         connection_max: 1200,
 //!         enabled: true,
 //!     };
-//! 
+//!
 //!     // Serialize it to a Gura string
 //!     let database_str = serde_gura::to_string(&database)?;
 //!     let expected = r#"
@@ -45,15 +44,14 @@
 //! enabled: true
 //!     "#;
 //!     assert_eq!(database_str, expected.trim());
-//! 
+//!
 //!     // Deserialize it back to a Rust type
 //!     let deserialized_database: Database = serde_gura::from_str(&database_str)?;
 //!     assert_eq!(database, deserialized_database);
-//! 
+//!
 //!     Ok(())
 //! }
 //! ```
-
 
 mod de;
 mod error;
