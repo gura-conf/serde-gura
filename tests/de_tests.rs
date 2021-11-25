@@ -323,4 +323,53 @@ key: "value""#;
 
         assert_eq!(deserialized_database, expected);
     }
+
+    /// Tests some issues with numeric keys
+    #[test]
+    fn test_numeric_object_keys() {
+        #[derive(Debug, Deserialize, Serialize, PartialEq)]
+        struct Values {
+            session_id: String,
+            sequence: u32,
+        }
+
+        #[derive(Debug, Deserialize, Serialize, PartialEq)]
+        struct Shards {
+            resumable_shards: HashMap<usize, Values>,
+        }
+
+        let gura_string = r#"
+resumable_shards:
+    0:
+        session_id: "Session 1"
+        sequence: 2
+    19:
+        session_id: "Session 2"
+        sequence: 29"#;
+
+        // Creates expected shards struct
+        let mut values = HashMap::new();
+        values.insert(
+            0,
+            Values {
+                session_id: "Session 1".to_string(),
+                sequence: 2,
+            },
+        );
+        values.insert(
+            19,
+            Values {
+                session_id: "Session 2".to_string(),
+                sequence: 29,
+            },
+        );
+        let expected = Shards {
+            resumable_shards: values,
+        };
+
+        // Deserialize it back to a Rust type
+        let deserialized_shards: Shards = serde_gura::from_str(&gura_string).unwrap();
+
+        assert_eq!(deserialized_shards, expected);
+    }
 }

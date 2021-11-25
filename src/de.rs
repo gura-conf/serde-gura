@@ -42,14 +42,31 @@ impl<'de> Deserializer {
         match &self.obj {
             GuraType::Integer(int_value) => Ok(*int_value as usize),
             GuraType::BigInteger(big_int_value) => Ok(*big_int_value as usize),
+            GuraType::Pair(key, ..) => {
+                if let Ok(key_unsigned) = key.parse::<usize>() {
+                    Ok(key_unsigned)
+                } else {
+                    Err(Error::ExpectedInteger)
+                }
+            }
             _ => Err(Error::ExpectedInteger),
         }
     }
 
     fn parse_signed(&mut self) -> Result<isize> {
-        match self.obj {
-            GuraType::Integer(int_value) => Ok(int_value),
-            _ => Err(Error::ExpectedInteger),
+        match &self.obj {
+            GuraType::Integer(int_value) => Ok(*int_value),
+            GuraType::Pair(key, ..) => {
+                if let Ok(key_signed) = key.parse::<isize>() {
+                    Ok(key_signed)
+                } else {
+                    Err(Error::ExpectedInteger)
+                }
+            }
+            _ => {
+                println!("OBJECT signed -> {:?}", self.obj);
+                Err(Error::ExpectedInteger)
+            }
         }
     }
 
