@@ -10,7 +10,7 @@ repository = "https://github.com/gura-conf/serde-gura"
 version = "0.1.4"
 
 [dependencies]
-gura = "0.4.1"
+gura = "0.5.0"
 indexmap = "1.7.0"
 serde = "1.0"
 
