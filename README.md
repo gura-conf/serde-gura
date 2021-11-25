@@ -19,7 +19,7 @@ Add the following dependencies to your `Cargo.toml`:
 ```toml
 [dependencies]
 serde = "1.0"
-serde_gura = "0.1.3"
+serde_gura = "0.1.4"
 ```
 
 If you want to use `Serialize`/`Deserialize` traits you must specify the *derive* feature in your `Cargo.toml`:
@@ -28,7 +28,7 @@ If you want to use `Serialize`/`Deserialize` traits you must specify the *derive
 ```toml
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
-serde_gura = "0.1.3"
+serde_gura = "0.1.4"
 ```
 
 
