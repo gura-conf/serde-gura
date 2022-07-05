@@ -7,7 +7,7 @@ keywords = ["serialization", "deserialization", "serde", "serialize", "deseriali
 license = "MIT"
 name = "serde_gura"
 repository = "https://github.com/gura-conf/serde-gura"
-version = "0.1.4"
+version = "0.1.5"
 
 [dependencies]
 gura = "0.5.0"
