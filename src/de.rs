@@ -11,7 +11,7 @@ pub struct Deserializer {
     obj: GuraType,
 }
 
-impl<'de> Deserializer {
+impl Deserializer {
     pub fn from_gura_type(obj: GuraType) -> Self {
         Deserializer { obj }
     }
@@ -29,7 +29,7 @@ where
 }
 
 // Serde is not a parsing library. That's why Gura Rust parser is used in this crate
-impl<'de> Deserializer {
+impl Deserializer {
     fn parse_bool(&mut self) -> Result<bool> {
         if let GuraType::Bool(boolean) = self.obj {
             Ok(boolean)
@@ -413,7 +413,7 @@ impl CommaSeparated {
 
 // `SeqAccess` is provided to the `Visitor` to give it the ability to iterate
 // through elements of the sequence.
-impl<'de, 'a> SeqAccess<'de> for CommaSeparated {
+impl<'de> SeqAccess<'de> for CommaSeparated {
     type Error = Error;
 
     fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
@@ -431,7 +431,7 @@ impl<'de, 'a> SeqAccess<'de> for CommaSeparated {
 
 // `MapAccess` is provided to the `Visitor` to give it the ability to iterate
 // through entries of the map.
-impl<'de, 'a> MapAccess<'de> for CommaSeparated {
+impl<'de> MapAccess<'de> for CommaSeparated {
     type Error = Error;
 
     fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>>
@@ -466,7 +466,7 @@ struct Enum {
     vec: VecDeque<(String, GuraType)>,
 }
 
-impl<'a, 'de> Enum {
+impl Enum {
     fn new(obj: GuraType) -> Self {
         let it: VecDeque<(String, GuraType)> = match obj {
             GuraType::Object(_) => obj
@@ -494,7 +494,7 @@ impl<'a, 'de> Enum {
 
 // `EnumAccess` is provided to the `Visitor` to give it the ability to determine
 // which variant of the enum is supposed to be deserialized
-impl<'de, 'a> EnumAccess<'de> for Enum {
+impl<'de> EnumAccess<'de> for Enum {
     type Error = Error;
     type Variant = Self;
 
@@ -512,7 +512,7 @@ impl<'de, 'a> EnumAccess<'de> for Enum {
 
 // `VariantAccess` is provided to the `Visitor` to give it the ability to see
 // the content of the single variant that it decided to deserialize.
-impl<'de, 'a> VariantAccess<'de> for Enum {
+impl<'de> VariantAccess<'de> for Enum {
     type Error = Error;
 
     // If the `Visitor` expected this variant to be a unit variant, the input
