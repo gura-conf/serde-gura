@@ -64,7 +64,6 @@ impl Deserializer {
                 }
             }
             _ => {
-                println!("OBJECT signed -> {:?}", self.obj);
                 Err(Error::ExpectedInteger)
             }
         }
