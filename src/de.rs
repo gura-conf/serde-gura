@@ -6,6 +6,13 @@ use serde::de::{
 };
 use std::collections::VecDeque;
 
+/// Generates an error message with the expected type and the field name
+fn get_error_with_field_msg(expected_type: &'static str, name: &'static str, fields: &'static [&'static str]) -> Option<String> {
+    let fields_joined = fields.join(".");
+    let failed_struct_str = format!("Expected {} for {}[{}]", expected_type, name, fields_joined);
+    Some(failed_struct_str)
+}
+
 #[derive(Debug)]
 pub struct Deserializer {
     obj: GuraType,
@@ -34,7 +41,7 @@ impl Deserializer {
         if let GuraType::Bool(boolean) = self.obj {
             Ok(boolean)
         } else {
-            Err(Error::ExpectedBoolean)
+            Err(Error::ExpectedBoolean(None))
         }
     }
 
@@ -46,10 +53,10 @@ impl Deserializer {
                 if let Ok(key_unsigned) = key.parse::<usize>() {
                     Ok(key_unsigned)
                 } else {
-                    Err(Error::ExpectedInteger)
+                    Err(Error::ExpectedInteger(None))
                 }
             }
-            _ => Err(Error::ExpectedInteger),
+            _ => Err(Error::ExpectedInteger(None)),
         }
     }
 
@@ -60,19 +67,17 @@ impl Deserializer {
                 if let Ok(key_signed) = key.parse::<isize>() {
                     Ok(key_signed)
                 } else {
-                    Err(Error::ExpectedInteger)
+                    Err(Error::ExpectedInteger(None))
                 }
             }
-            _ => {
-                Err(Error::ExpectedInteger)
-            }
+            _ => Err(Error::ExpectedInteger(None)),
         }
     }
 
     fn parse_float(&mut self) -> Result<f64> {
         match &self.obj {
             GuraType::Float(float_value) => Ok(*float_value),
-            _ => Err(Error::ExpectedFloat),
+            _ => Err(Error::ExpectedFloat(None)),
         }
     }
 
@@ -81,10 +86,10 @@ impl Deserializer {
             if str.len() == 1 {
                 Ok(str.chars().next().unwrap())
             } else {
-                Err(Error::ExpectedChar)
+                Err(Error::ExpectedChar(None))
             }
         } else {
-            Err(Error::ExpectedChar)
+            Err(Error::ExpectedChar(None))
         }
     }
 
@@ -92,7 +97,7 @@ impl Deserializer {
         match &self.obj {
             GuraType::Pair(key, _, _) => Ok(key.clone()),
             GuraType::String(str_value) => Ok(str_value.clone()),
-            _ => Err(Error::ExpectedString),
+            _ => Err(Error::ExpectedString(None)),
         }
     }
 }
@@ -273,7 +278,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer {
                 let value = visitor.visit_seq(CommaSeparated::new(obj))?;
                 Ok(value)
             }
-            _ => Err(Error::ExpectedArray),
+            _ => Err(Error::ExpectedArray(None)),
         }
     }
 
@@ -310,7 +315,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer {
             let value = visitor.visit_map(CommaSeparated::new(obj_aux))?;
             Ok(value)
         } else {
-            Err(Error::ExpectedMap)
+            Err(Error::ExpectedMap(None))
         }
     }
 
@@ -320,14 +325,41 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer {
     // the fields cannot be known ahead of time is probably a map.
     fn deserialize_struct<V>(
         self,
-        _name: &'static str,
-        _fields: &'static [&'static str],
+        name: &'static str,
+        fields: &'static [&'static str],
         visitor: V,
     ) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        self.deserialize_map(visitor)
+        // TODO: add current type of value and add to the message
+        match self.deserialize_map(visitor) {
+            Ok(value) => Ok(value),
+            Err(Error::ExpectedBoolean(None)) => {
+                Err(Error::ExpectedBoolean(get_error_with_field_msg("boolean", name, fields)))
+            }
+            Err(Error::ExpectedInteger(None)) => {
+                Err(Error::ExpectedInteger(get_error_with_field_msg("integer", name, fields)))
+            }
+            Err(Error::ExpectedFloat(None)) => {
+                Err(Error::ExpectedFloat(get_error_with_field_msg("float", name, fields)))
+            }
+            Err(Error::ExpectedChar(None)) => {
+                Err(Error::ExpectedChar(get_error_with_field_msg("char", name, fields)))
+            }
+            Err(Error::ExpectedString(None)) => {
+                Err(Error::ExpectedString(get_error_with_field_msg("string", name, fields)))
+            }
+            Err(Error::ExpectedArray(None)) => {
+                Err(Error::ExpectedArray(get_error_with_field_msg("array", name, fields)))
+            }
+            Err(Error::ExpectedMap(None)) => {
+                Err(Error::ExpectedMap(get_error_with_field_msg("map", name, fields)))
+            }
+            Err(err) => {
+                Err(err)
+            },
+        }
     }
 
     fn deserialize_enum<V>(
@@ -397,7 +429,7 @@ impl CommaSeparated {
         if let Some(elem) = self.vec.front() {
             Ok(elem.clone())
         } else {
-            Err(Error::ExpectedMap)
+            Err(Error::ExpectedMap(None))
         }
     }
 
@@ -405,7 +437,7 @@ impl CommaSeparated {
         if let Some(elem) = self.vec.pop_front() {
             Ok(elem)
         } else {
-            Err(Error::ExpectedMap)
+            Err(Error::ExpectedMap(None))
         }
     }
 }
@@ -486,7 +518,7 @@ impl Enum {
         if let Some(elem) = self.vec.front() {
             Ok(elem.clone())
         } else {
-            Err(Error::ExpectedMap)
+            Err(Error::ExpectedMap(None))
         }
     }
 }

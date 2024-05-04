@@ -3,6 +3,19 @@ use std::fmt::{self, Display};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+/// Write error message to formatter
+fn write_error(
+    f: &mut fmt::Formatter,
+    msg_option: &Option<String>,
+    msg_default: &'static str,
+) -> fmt::Result {
+    if let Some(msg_value) = msg_option {
+        f.write_str(msg_value)
+    } else {
+        f.write_str(msg_default)
+    }
+}
+
 /// Types of errors that may occur during serialization/deserialization
 #[derive(Clone, Debug, PartialEq)]
 pub enum Error {
@@ -19,16 +32,16 @@ pub enum Error {
     Eof,
     Syntax(String),
     ExpectedBytes,
-    ExpectedBoolean,
-    ExpectedInteger,
-    ExpectedFloat,
-    ExpectedChar,
-    ExpectedString,
+    ExpectedBoolean(Option<String>),
+    ExpectedInteger(Option<String>),
+    ExpectedFloat(Option<String>),
+    ExpectedChar(Option<String>),
+    ExpectedString(Option<String>),
     ExpectedNull,
-    ExpectedArray,
+    ExpectedArray(Option<String>),
     ExpectedArrayComma,
     ExpectedArrayEnd,
-    ExpectedMap,
+    ExpectedMap(Option<String>),
     ExpectedMapColon,
     ExpectedMapComma,
     ExpectedMapEnd,
@@ -57,6 +70,7 @@ impl Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use Error::*;
 
+        // TODO: refactor all if let/else in a function
         match self {
             Syntax(msg) => write!(
                 f,
@@ -68,20 +82,25 @@ impl Display for Error {
             UnitNotSupported => f.write_str("Unit values are not supported in Gura"),
 
             ExpectedBytes => f.write_str("Expected byte sequence"),
-            ExpectedBoolean => f.write_str("Expected boolean"),
-            ExpectedInteger => f.write_str("Expected integer"),
-            ExpectedFloat => f.write_str(concat!(
-                "Expected float: perhaps you forgot decimal fractional part",
-                " (No implicit coversion between int and float, ",
-                "see https://gura.netlify.app/docs/spec#float)"
-            )),
-            ExpectedChar => f.write_str("Expected char"),
-            ExpectedString => f.write_str("Expected string"),
+            ExpectedBoolean(msg) => write_error(f, msg, "Expected boolean"),
+            ExpectedInteger(msg) => write_error(f, msg, "Expected integer"),
+            ExpectedFloat(msg) => write_error(
+                f,
+                msg,
+                concat!(
+                    "Expected float: perhaps you forgot decimal fractional part",
+                    " (no implicit conversion between int and float, ",
+                    "see https://gura.netlify.app/docs/spec#float)"
+                ),
+            ),
+            ExpectedChar(msg) => write_error(f, msg, "Expected char"),
+            ExpectedString(msg) => write_error(f, msg, "Expected string"),
             ExpectedNull => f.write_str("Expected null value"),
-            ExpectedArray => f.write_str("Expected array"),
+            ExpectedArray(msg) => write_error(f, msg, "Expected array"),
             ExpectedArrayEnd => f.write_str("Expected array end"),
 
-            ExpectedMap => f.write_str("Expected map"),
+            // ExpectedMap => write!(f, "Expected map"),
+            ExpectedMap(msg) => write_error(f, msg, "Expected map"),
             ExpectedMapColon => f.write_str("Expected colon at map"),
             ExpectedMapComma => f.write_str("Expected comma at map"),
             ExpectedMapEnd => f.write_str("Expected map end"),
