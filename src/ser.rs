@@ -1,7 +1,7 @@
 use super::error::{Error, Result};
 use gura::{dump, GuraType};
 use indexmap::IndexMap;
-use serde::ser;
+use serde::{ser, Serialize};
 
 pub struct Serializer;
 
@@ -94,14 +94,14 @@ impl ser::Serializer for Serializer {
         Ok(GuraType::String(variant.to_owned()))
     }
 
-    fn serialize_newtype_struct<T: ?Sized>(self, _name: &'static str, value: &T) -> Result<GuraType>
+    fn serialize_newtype_struct<T>(self, _name: &'static str, value: &T) -> Result<GuraType>
     where
-        T: ser::Serialize,
+        T: ser::Serialize + ?Sized,
     {
         value.serialize(self)
     }
 
-    fn serialize_newtype_variant<T: ?Sized>(
+    fn serialize_newtype_variant<T>(
         self,
         _name: &str,
         _variant_index: u32,
@@ -109,7 +109,7 @@ impl ser::Serializer for Serializer {
         value: &T,
     ) -> Result<GuraType>
     where
-        T: ser::Serialize,
+        T: ser::Serialize + ?Sized,
     {
         Ok(singleton_hash(variant.to_string(), to_gura_type(value)?))
     }
@@ -118,9 +118,9 @@ impl ser::Serializer for Serializer {
         self.serialize_unit()
     }
 
-    fn serialize_some<V: ?Sized>(self, value: &V) -> Result<GuraType>
+    fn serialize_some<V>(self, value: &V) -> Result<GuraType>
     where
-        V: ser::Serialize,
+        V: ser::Serialize + ?Sized,
     {
         value.serialize(self)
     }
@@ -213,9 +213,9 @@ impl ser::SerializeSeq for SerializeArray {
     type Ok = GuraType;
     type Error = Error;
 
-    fn serialize_element<T: ?Sized>(&mut self, elem: &T) -> Result<()>
+    fn serialize_element<T>(&mut self, elem: &T) -> Result<()>
     where
-        T: ser::Serialize,
+        T: ser::Serialize + ?Sized,
     {
         self.array.push(to_gura_type(elem)?);
         Ok(())
@@ -230,9 +230,9 @@ impl ser::SerializeTuple for SerializeArray {
     type Ok = GuraType;
     type Error = Error;
 
-    fn serialize_element<T: ?Sized>(&mut self, elem: &T) -> Result<()>
+    fn serialize_element<T>(&mut self, elem: &T) -> Result<()>
     where
-        T: ser::Serialize,
+        T: ser::Serialize + ?Sized,
     {
         ser::SerializeSeq::serialize_element(self, elem)
     }
@@ -246,9 +246,9 @@ impl ser::SerializeTupleStruct for SerializeArray {
     type Ok = GuraType;
     type Error = Error;
 
-    fn serialize_field<V: ?Sized>(&mut self, value: &V) -> Result<()>
+    fn serialize_field<V>(&mut self, value: &V) -> Result<()>
     where
-        V: ser::Serialize,
+        V: ser::Serialize + ?Sized,
     {
         ser::SerializeSeq::serialize_element(self, value)
     }
@@ -262,9 +262,9 @@ impl ser::SerializeTupleVariant for SerializeTupleVariant {
     type Ok = GuraType;
     type Error = Error;
 
-    fn serialize_field<V: ?Sized>(&mut self, v: &V) -> Result<()>
+    fn serialize_field<V>(&mut self, v: &V) -> Result<()>
     where
-        V: ser::Serialize,
+        V: ser::Serialize + ?Sized,
     {
         self.array.push(to_gura_type(v)?);
         Ok(())
@@ -282,17 +282,17 @@ impl ser::SerializeMap for SerializeMap {
     type Ok = GuraType;
     type Error = Error;
 
-    fn serialize_key<T: ?Sized>(&mut self, key: &T) -> Result<()>
+    fn serialize_key<T>(&mut self, key: &T) -> Result<()>
     where
-        T: ser::Serialize,
+        T: ser::Serialize + ?Sized,
     {
         self.next_key = Some(to_gura_type(key)?.to_string());
         Ok(())
     }
 
-    fn serialize_value<T: ?Sized>(&mut self, value: &T) -> Result<()>
+    fn serialize_value<T>(&mut self, value: &T) -> Result<()>
     where
-        T: ser::Serialize,
+        T: ser::Serialize + ?Sized,
     {
         match self.next_key.take() {
             Some(key) => self.hash.insert(key, to_gura_type(value)?),
@@ -301,10 +301,10 @@ impl ser::SerializeMap for SerializeMap {
         Ok(())
     }
 
-    fn serialize_entry<K: ?Sized, V: ?Sized>(&mut self, key: &K, value: &V) -> Result<()>
+    fn serialize_entry<K, V>(&mut self, key: &K, value: &V) -> Result<()>
     where
-        K: ser::Serialize,
-        V: ser::Serialize,
+        K: ser::Serialize + ?Sized,
+        V: ser::Serialize + ?Sized,
     {
         let gura_elem = to_gura_type(key)?;
 
@@ -328,9 +328,9 @@ impl ser::SerializeStruct for SerializeStruct {
     type Ok = GuraType;
     type Error = Error;
 
-    fn serialize_field<V: ?Sized>(&mut self, key: &'static str, value: &V) -> Result<()>
+    fn serialize_field<V>(&mut self, key: &'static str, value: &V) -> Result<()>
     where
-        V: ser::Serialize,
+        V: ser::Serialize + ?Sized,
     {
         self.hash.insert(key.to_string(), to_gura_type(value)?);
         Ok(())
@@ -345,9 +345,9 @@ impl ser::SerializeStructVariant for SerializeStructVariant {
     type Ok = GuraType;
     type Error = Error;
 
-    fn serialize_field<V: ?Sized>(&mut self, field: &'static str, v: &V) -> Result<()>
+    fn serialize_field<V>(&mut self, field: &'static str, v: &V) -> Result<()>
     where
-        V: ser::Serialize,
+        V: ser::Serialize + ?Sized,
     {
         self.hash.insert(field.to_string(), to_gura_type(v)?);
         Ok(())
@@ -385,4 +385,45 @@ fn singleton_hash(k: String, v: GuraType) -> GuraType {
     let mut hash = IndexMap::new();
     hash.insert(k, v);
     GuraType::Object(hash)
+}
+
+/// Convert a `T` into `gura::GuraType` which is an enum that can represent
+/// any valid Gura data.
+///
+/// # Example
+///
+/// ```
+/// use serde_derive::Serialize;
+/// use std::error::Error;
+///
+/// #[derive(Serialize)]
+/// struct User {
+///     fingerprint: String,
+///     location: String,
+/// }
+///
+/// fn main() -> Result<(), Box<dyn Error>> {
+///     let u = User {
+///         fingerprint: "0xF9BA143B95FF6D82".to_owned(),
+///         location: "Menlo Park, CA".to_owned(),
+///     };
+///
+///     // The type of `expected` is `gura::GuraType`
+///     let str = r##"
+/// fingerprint: "0xF9BA143B95FF6D82"
+/// location: "Menlo Park, CA"
+///     "##;
+///     let expected = gura::parse(str).unwrap();
+///
+///     let v = serde_gura::to_value(u).unwrap();
+///     assert_eq!(v, expected);
+///
+///     Ok(())
+/// }
+/// ```
+pub fn to_value<T>(value: T) -> Result<GuraType>
+where
+    T: Serialize,
+{
+    value.serialize(Serializer)
 }

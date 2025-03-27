@@ -1,8 +1,8 @@
 use crate::error::{Error, Result};
 use gura::{parse, GuraType};
 use serde::de::{
-    self, Deserialize, DeserializeSeed, EnumAccess, IntoDeserializer, MapAccess, SeqAccess,
-    VariantAccess, Visitor,
+    self, Deserialize, DeserializeOwned, DeserializeSeed, EnumAccess, IntoDeserializer, MapAccess,
+    SeqAccess, VariantAccess, Visitor,
 };
 use std::collections::VecDeque;
 
@@ -97,7 +97,7 @@ impl Deserializer {
     }
 }
 
-impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer {
+impl<'de> de::Deserializer<'de> for &mut Deserializer {
     type Error = Error;
 
     // Look at the input data to decide what Serde data model type to deserialize as
@@ -549,4 +549,36 @@ impl<'de> VariantAccess<'de> for Enum {
         let de: &mut Deserializer = &mut Deserializer::from_gura_type(dequeue_as_vec);
         de::Deserializer::deserialize_map(de, visitor)
     }
+}
+
+/// Interpret a `gura::GuraType` as an instance of type `T`.
+///
+/// # Example
+///
+/// ```
+/// use serde_derive::Deserialize;
+///
+///
+/// #[derive(Deserialize, Debug)]
+/// struct User {
+///     fingerprint: String,
+///     location: String,
+/// }
+///
+/// let str = r##"
+/// fingerprint: "0xF9BA143B95FF6D82"
+/// location: "Menlo Park, CA"
+/// "##;
+/// // The type of `j` is `gura::GuraType`
+/// let j = gura::parse(str).unwrap();
+///
+/// let u: User = serde_gura::from_value(j).unwrap();
+/// println!("{:#?}", u);
+/// println!("fingerprint: {} | location: {}", u.fingerprint, u.location);
+/// ```
+pub fn from_value<T>(value: GuraType) -> Result<T>
+where
+    T: DeserializeOwned,
+{
+    from_str(&value.to_string())
 }

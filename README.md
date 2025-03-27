@@ -52,7 +52,7 @@ struct Database {
 
 fn main() -> Result<()> {
     // You have some type.
-    let database = Database {
+    let database = Database{
         ip: "127.0.0.1".to_string(),
         port: vec![80, 8080],
         connection_max: 1200,
